@@ -22,6 +22,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(false);
     // setIsLoading(true)
 
     // if (!userIdentifier.trim()) {
