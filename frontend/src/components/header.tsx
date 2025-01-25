@@ -24,7 +24,7 @@ export function Header() {
         </Sheet>
         <div className="flex flex-1 items-center justify-center">
           <a href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-xl">YourBrand</span>
+            <span className="font-medium text-xl">Your Company</span>
           </a>
         </div>
         <div className="flex items-center justify-end space-x-4">

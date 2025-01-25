@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import AppPage from "./pages/app";
+import Feed from "./pages/app/feed";
 import ForgotPasswordPage from "./pages/forgot-password";
 import LoginPage from "./pages/login";
 import ResetPasswordPage from "./pages/reset-password";
@@ -18,7 +19,9 @@ export const RouterConfig = () => {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/app" element={<ProtectedRoute element={<AppPage />} />} />
+        <Route path="/app" element={<ProtectedRoute element={<AppPage />} />}>
+          <Route index element={<Feed />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

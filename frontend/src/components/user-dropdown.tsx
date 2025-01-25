@@ -22,8 +22,8 @@ export function UserDropdown() {
   };
 
   const handleLogout = () => {
-    // Implement logout logic here
     console.log("Logging out...");
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/logout`;
   };
 
   return (

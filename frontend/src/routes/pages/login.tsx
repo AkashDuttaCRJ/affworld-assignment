@@ -3,8 +3,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(false);
 
   async function onSubmit(event: React.SyntheticEvent) {
@@ -91,12 +94,7 @@ export default function LoginPage() {
                   Forgot password?
                 </a>
               </div>
-              <Button disabled={isLoading}>
-                {/* {isLoading && (
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                )} */}
-                Sign In
-              </Button>
+              <Button>Sign In</Button>
             </div>
           </form>
           <div className="relative">
@@ -109,12 +107,15 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
-          <Button variant="outline" type="button" disabled={isLoading}>
-            {/* {isLoading ? (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Icons.google className="mr-2 h-4 w-4" />
-            )}{" "} */}
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => {
+              window.location.href = `${
+                import.meta.env.VITE_API_URL
+              }/auth/google`;
+            }}
+          >
             Google
           </Button>
           <p className="px-8 text-center text-sm text-muted-foreground">
