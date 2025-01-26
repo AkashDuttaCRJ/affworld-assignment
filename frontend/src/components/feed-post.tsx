@@ -17,6 +17,8 @@ import parse from "html-react-parser";
 import { Heart, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
 import { useState } from "react";
 import sanitizeHtml from "sanitize-html";
+import DynamicGrid from "./dynamic-grid";
+import { PostImage } from "./post-image";
 
 interface FeedPostProps {
   user: {
@@ -26,7 +28,7 @@ interface FeedPostProps {
   };
   post: {
     caption: string;
-    image: string;
+    images: string[];
     postedAt: Date;
     likes: number;
     comments: number;
@@ -72,15 +74,13 @@ export function FeedPost({ user, post }: FeedPostProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-0">
-        <img
-          src={post.image || "/placeholder.svg"}
-          alt="Post image"
-          width={500}
-          height={500}
-          className="w-full h-auto"
-        />
-        <div className="p-4">
+      <CardContent className="p-4">
+        <DynamicGrid>
+          {post.images.map((image) => (
+            <PostImage key={image} image={image} />
+          ))}
+        </DynamicGrid>
+        <div>
           <p className="text-sm [&_[data-hashtag=true]]:text-blue-500">
             {parse(sanitizeHtml(post.caption))}
           </p>

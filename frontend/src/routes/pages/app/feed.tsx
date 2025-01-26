@@ -3,13 +3,15 @@ import { CreateFeedPostDialog } from "@/components/create-post-dialog";
 import { FeedPost } from "@/components/feed-post";
 
 export default function Feed() {
-  const { data } = useGetAllPosts();
-
-  console.log({ posts: data?.data });
+  const { data, refetch } = useGetAllPosts();
 
   return (
     <div className="p-8 space-y-5">
-      <CreateFeedPostDialog />
+      <CreateFeedPostDialog
+        onCreatePostCallback={() => {
+          refetch();
+        }}
+      />
       {data?.data?.posts.map((post) => {
         return (
           <FeedPost
@@ -17,7 +19,7 @@ export default function Feed() {
             post={{
               caption: post.caption,
               comments: 0,
-              image: post.imageUrls[0],
+              images: post.imageUrls,
               likes: 0,
               postedAt: new Date(post.createdAt),
             }}

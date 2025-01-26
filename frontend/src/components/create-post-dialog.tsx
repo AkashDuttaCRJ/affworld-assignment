@@ -13,15 +13,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { axios } from "@/lib/axios";
-import { ImagePlus, LoaderCircle, Smile, X } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { ImagePlus, LoaderCircle, Plus, Smile, X } from "lucide-react";
+import { Carousel } from "nuka-carousel";
 import { useRef, useState } from "react";
+import TextareaAutosize from "react-textarea-autosize";
+import { toast } from "sonner";
 
 interface CreateFeedPostDialogProps {
-  onCreatePost?: () => void;
+  onCreatePostCallback?: () => void;
 }
 
 export function CreateFeedPostDialog({
-  onCreatePost,
+  onCreatePostCallback,
 }: CreateFeedPostDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [caption, setCaption] = useState("");
@@ -31,6 +36,12 @@ export function CreateFeedPostDialog({
   );
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { mutate: createPost } = useMutation({
+    mutationFn: (data: { imageUrls: string[]; caption: string }) => {
+      return axios.post("/post", data);
+    },
+  });
 
   //   const handleEmojiClick = (emojiObject: any) => {
   //     setCaption((prevCaption) => prevCaption + emojiObject.emoji)
@@ -101,19 +112,26 @@ export function CreateFeedPostDialog({
       const uploadedImages = await Promise.all(uploadPromises);
       const imageUrls = uploadedImages.map((img) => img.secure_url);
 
-      const res = await axios.post("/post", {
-        imageUrls,
-        caption,
-      });
-
-      if (!res.data.success) {
-        // alert
-      }
-
-      onCreatePost?.();
-      setCaption("");
-      setImages([]);
-      setIsOpen(false);
+      createPost(
+        {
+          imageUrls,
+          caption,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Post created successfully!");
+            onCreatePostCallback?.();
+            setCaption("");
+            setImages([]);
+            setIsOpen(false);
+          },
+          onError(error) {
+            if (error instanceof AxiosError) {
+              toast.error(error.response?.data.message);
+            }
+          },
+        }
+      );
     } catch (error) {
       console.log(error);
     }
@@ -124,7 +142,12 @@ export function CreateFeedPostDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Create Post</Button>
+        <Button
+          size="icon"
+          className="fixed bottom-10 right-10 w-16 h-16 rounded-full [&_svg]:size-6"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -132,45 +155,43 @@ export function CreateFeedPostDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <div className="relative">
-              {/* <Textarea
-                id="caption"
-                placeholder="What's on your mind?"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                className="pr-10"
-              /> */}
-              <textarea
-                placeholder="What's on your mind?"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                className="w-full resize-none"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-2"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              >
-                <Smile className="h-4 w-4" />
-              </Button>
-            </div>
-            {/* {showEmojiPicker && (
-              <div className="absolute z-10">
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
+            <div className="flex flex-col">
+              <div className="relative">
+                <TextareaAutosize
+                  minRows={4}
+                  maxRows={10}
+                  maxLength={500}
+                  placeholder="What's on your mind?"
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  className="w-full resize-none focus:outline-none"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 bottom-2"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
               </div>
-            )} */}
+              <span className="self-end text-xs text-muted-foreground">
+                {caption.length} / 500
+              </span>
+            </div>
           </div>
           <div className="space-y-2">
             <div className="flex flex-wrap gap-2">
-              {images.map((image, index) => (
-                <div key={index} className="relative">
+              {images.length === 1 && (
+                <div className="relative">
                   <img
-                    src={URL.createObjectURL(image.image) || "/placeholder.svg"}
-                    alt={`Uploaded image ${index + 1}`}
+                    src={
+                      URL.createObjectURL(images[0].image) || "/placeholder.svg"
+                    }
+                    alt={`Uploaded image ${1}`}
                     style={{
-                      aspectRatio: image.aspectRatio,
+                      aspectRatio: images[0].aspectRatio,
                     }}
                     className="w-full object-cover rounded-lg"
                   />
@@ -178,21 +199,40 @@ export function CreateFeedPostDialog({
                     type="button"
                     variant="default"
                     size="icon"
-                    className="absolute top-2 right-2 rounded-full"
-                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 rounded-full shrink-0"
+                    onClick={() => removeImage(0)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-              ))}
-              {/* <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <ImagePlus className="h-4 w-4" />
-              </Button> */}
+              )}
+              {images.length > 1 && (
+                <Carousel scrollDistance={100}>
+                  {images.map((image, index) => (
+                    <div className="relative">
+                      <img
+                        src={
+                          URL.createObjectURL(image.image) || "/placeholder.svg"
+                        }
+                        alt={`Uploaded image ${index + 1}`}
+                        style={{
+                          aspectRatio: image.aspectRatio,
+                        }}
+                        className="w-full object-cover rounded-lg shrink-0"
+                      />
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="icon"
+                        className="absolute top-2 right-2 rounded-full"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </Carousel>
+              )}
             </div>
             <input
               type="file"
@@ -208,7 +248,7 @@ export function CreateFeedPostDialog({
           <div className="flex items-center justify-between">
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
