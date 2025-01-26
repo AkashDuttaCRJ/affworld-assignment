@@ -10,7 +10,7 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
 
 const getUsernameAvailability: RequestHandler = async (req, res) => {
   try {
-    const { username } = req.params;
+    const { username } = req.query;
 
     if (!username) {
       res.status(400).json({ success: false, message: "Username is required" });
@@ -25,7 +25,7 @@ const getUsernameAvailability: RequestHandler = async (req, res) => {
 
     if (existingUser) {
       res
-        .status(400)
+        .status(200)
         .json({ success: false, message: "Username already exists" });
       return;
     }

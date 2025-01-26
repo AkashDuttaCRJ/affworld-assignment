@@ -10,4 +10,13 @@ const instance = axios.create({
   withCredentials: true,
 });
 
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response.status === 401 && window.location.pathname !== "/") {
+      window.location.href = "/";
+    }
+  }
+);
+
 export { instance as axios };

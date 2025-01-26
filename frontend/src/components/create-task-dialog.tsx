@@ -102,6 +102,9 @@ export function CreateTaskDialog({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter task description"
               required
+              className="resize-none"
+              rows={4}
+              maxLength={300}
             />
           </div>
           <div className="space-y-2">

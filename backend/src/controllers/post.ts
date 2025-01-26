@@ -23,7 +23,7 @@ const handleCreatePost: RequestHandler = async (req, res) => {
     const post = await Post.create({
       imageUrls,
       caption,
-      _userId: user._id,
+      _user: user._id,
     });
 
     res
@@ -41,7 +41,7 @@ const handleGetAllPosts: RequestHandler = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const posts = await Post.find()
-      .populate("_userId")
+      .populate("_user")
       .sort({ createdAt: -1 })
       .skip((+page - 1) * +limit)
       .limit(+limit)
@@ -74,7 +74,7 @@ const handleGetPost: RequestHandler = async (req, res) => {
     const post = await Post.findOne({
       _id: id,
     })
-      .populate("_userId")
+      .populate("_user")
       .exec();
     if (!post) {
       res.status(404).json({ success: false, message: "Post not found" });

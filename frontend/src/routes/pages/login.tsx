@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useVerifyToken } from "@/hooks/use-verify-token";
 import { axios } from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -34,6 +35,7 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  useVerifyToken("login");
   const navigate = useNavigate();
   const [remember, setRemember] = useState(false);
 

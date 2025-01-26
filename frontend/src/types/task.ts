@@ -1,3 +1,5 @@
+import { User } from "./user";
+
 interface Task {
   _id: string;
   name: string;
@@ -11,7 +13,7 @@ interface Task {
 interface Column {
   _id: string;
   name: string;
-  _user: string;
+  _user: Pick<User, "_id">;
   tasks: Task[];
   __v: number;
   createdAt: string;

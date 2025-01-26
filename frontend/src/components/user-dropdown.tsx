@@ -8,32 +8,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
-import { useState } from "react";
+import { axios } from "@/lib/axios";
+import { User } from "@/types/user";
+import { LogOut, User as UserIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function UserDropdown() {
+  const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  // This would typically come from your authentication context
-  const user = {
-    name: "John Doe",
-    email: "john@example.com",
-    image: "/placeholder.svg?height=32&width=32",
-  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      const res = await axios.get("/user");
+
+      if (res.data.success) setUser(res.data.data);
+    };
+
+    fetchUser();
+  }, []);
 
   const handleLogout = () => {
     console.log("Logging out...");
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/logout`;
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="focus-visible:ring-0">
           <Avatar>
-            <AvatarImage src={user.image} alt={user.name} />
+            <AvatarImage src={user.profile} alt={user.username} />
             <AvatarFallback>
-              <User className="h-5 w-5" />
+              <UserIcon className="h-5 w-5" />
             </AvatarFallback>
           </Avatar>
           <span className="sr-only">Open user menu</span>
@@ -42,7 +52,7 @@ export function UserDropdown() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{user.name.full}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -51,7 +61,7 @@ export function UserDropdown() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <a href="/profile">
-            <User className="mr-2 h-4 w-4" />
+            <UserIcon className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </a>
         </DropdownMenuItem>

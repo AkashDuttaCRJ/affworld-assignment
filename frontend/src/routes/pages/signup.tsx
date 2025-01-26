@@ -15,21 +15,10 @@ import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { ControllerRenderProps, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import * as z from "zod";
-
-// Mock function to check username availability
-const checkUsernameAvailability = async (
-  username: string
-): Promise<boolean> => {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // Mock taken usernames
-  const takenUsernames = ["john_doe", "jane_smith", "admin"];
-  return !takenUsernames.includes(username);
-};
 
 const signUpSchema = z
   .object({
@@ -98,11 +87,43 @@ export default function SignupPage() {
 
   const checkUsername = async (username: string) => {
     if (username.length >= 3) {
-      const isAvailable = await checkUsernameAvailability(username);
+      const res = await axios.get("/username-availablity", {
+        params: { username },
+      });
+      console.log({ res });
+      const isAvailable = res.data.success;
       setUsernameAvailable(isAvailable);
     } else {
       setUsernameAvailable(null);
     }
+  };
+
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+  const handleInputChange = (
+    field: ControllerRenderProps<
+      {
+        firstName: string;
+        lastName: string;
+        username: string;
+        email: string;
+        password: string;
+        confirmPassword: string;
+      },
+      "username"
+    >,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    field.onChange(e);
+    if (debounceTimer) clearTimeout(debounceTimer);
+
+    const newTimer = setTimeout(() => {
+      checkUsername(e.target.value);
+    }, 500);
+
+    setDebounceTimer(newTimer);
   };
 
   return (
@@ -182,10 +203,7 @@ export default function SignupPage() {
                         placeholder="johndoe"
                         disabled={loading}
                         {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          checkUsername(e.target.value);
-                        }}
+                        onChange={(e) => handleInputChange(field, e)}
                       />
                     </FormControl>
                     {usernameAvailable !== null && (

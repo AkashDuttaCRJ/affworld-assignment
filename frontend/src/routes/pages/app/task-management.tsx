@@ -25,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useVerifyToken } from "@/hooks/use-verify-token";
 import { axios } from "@/lib/axios";
 import { BoardData } from "@/types/task";
 import {
@@ -41,6 +42,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function TaskManagementPage() {
+  useVerifyToken();
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [data, setData] = useState<BoardData>({ data: [] });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);

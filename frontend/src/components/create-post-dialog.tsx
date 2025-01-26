@@ -144,12 +144,12 @@ export function CreateFeedPostDialog({
       <DialogTrigger asChild>
         <Button
           size="icon"
-          className="fixed bottom-10 right-10 w-16 h-16 rounded-full [&_svg]:size-6"
+          className="fixed bottom-5 md:bottom-10 right-5 md:right-10 w-16 h-16 rounded-full [&_svg]:size-6"
         >
           <Plus className="h-6 w-6" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-[95vw] rounded-lg sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Post</DialogTitle>
         </DialogHeader>
