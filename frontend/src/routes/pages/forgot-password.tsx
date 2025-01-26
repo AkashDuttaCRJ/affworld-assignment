@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,41 +7,59 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { axios } from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+
+const formSchema = z.object({
+  userIdentifier: z
+    .string()
+    .min(1, { message: "User identifier is required." }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function ForgotPasswordPage() {
-  const [userIdentifier, setUserIdentifier] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: forgotPassword, isPending: loading } = useMutation({
+    mutationFn: (data: { identifier: string }) => {
+      return axios.post("/auth/forgot-password", data);
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(false);
-    // setIsLoading(true)
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      userIdentifier: "",
+    },
+  });
 
-    // if (!userIdentifier.trim()) {
-    //   setError("Please enter a username or email")
-    //   setIsLoading(false)
-    //   return
-    // }
-
-    // try {
-    //   // Here you would typically call your API to handle the password reset request
-    //   // For demonstration, we're just simulating an API call with a timeout
-    //   await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    //   // Simulating a successful response
-    //   console.log("Password reset requested for:", userIdentifier)
-    //   router.push("/reset-password-confirmation")
-    // } catch (err) {
-    //   setError("An error occurred. Please try again.")
-    // } finally {
-    //   setIsLoading(false)
-    // }
+  const handleSubmit = async (data: FormValues) => {
+    forgotPassword(
+      { identifier: data.userIdentifier },
+      {
+        onSuccess: (data) => {
+          toast.success(data.data.message);
+        },
+        onError: (error) => {
+          if (error instanceof AxiosError) {
+            toast.error(error.response?.data.message);
+          }
+        },
+      }
+    );
   };
 
   return (
@@ -55,34 +71,40 @@ export default function ForgotPasswordPage() {
             Enter your username or email to reset your password.
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="userIdentifier">Username or Email</Label>
-                <Input
-                  id="userIdentifier"
-                  type="text"
-                  placeholder="Enter your username or email"
-                  value={userIdentifier}
-                  onChange={(e) => setUserIdentifier(e.target.value)}
-                  required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <CardContent>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="userIdentifier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="userIdentifier">
+                        Username or Email
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          id="userIdentifier"
+                          type="text"
+                          placeholder="Enter your username or email"
+                          disabled={loading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              {error && (
-                <div className="text-red-500 text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {error}
-                </div>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Sending Reset Link..." : "Reset Password"}
-            </Button>
-          </CardFooter>
-        </form>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Sending Reset Link..." : "Reset Password"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
       </Card>
     </div>
   );

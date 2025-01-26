@@ -7,36 +7,76 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { axios } from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router";
+import { toast } from "sonner";
+import * as z from "zod";
+
+const formSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters" }),
+    confirmPassword: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters" }),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function ResetPasswordPage() {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const validatePassword = (password: string) => {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasNonalphas = /\W/.test(password);
-    return (
-      password.length >= minLength &&
-      hasUpperCase &&
-      hasLowerCase &&
-      hasNumbers &&
-      hasNonalphas
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const { mutate: resetPassword, isPending: loading } = useMutation({
+    mutationFn: (data: { password: string }) => {
+      return axios.post("/auth/reset-password", {
+        password: data.password,
+        token: searchParams.get("token"),
+      });
+    },
+  });
+
+  const handleSubmit = async (data: FormValues) => {
+    resetPassword(
+      { password: data.newPassword },
+      {
+        onSuccess: (data) => {
+          toast.success(data.data.message);
+          navigate("/");
+        },
+        onError: (error) => {
+          if (error instanceof AxiosError) {
+            toast.error(error.response?.data.message);
+          }
+        },
+      }
     );
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(false);
   };
 
   return (
@@ -46,51 +86,59 @@ export default function ResetPasswordPage() {
           <CardTitle>Reset Password</CardTitle>
           <CardDescription>Enter your new password below.</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <CardContent>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="newPassword">New Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          placeholder="Enter your new password"
+                          disabled={loading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor="confirmPassword">
+                        Confirm Password
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="Confirm your password"
+                          disabled={loading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-              {error && (
-                <div className="text-red-500 text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {error}
-                </div>
-              )}
-              {newPassword &&
-                validatePassword(newPassword) &&
-                newPassword === confirmPassword && (
-                  <div className="text-green-500 text-sm flex items-center">
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Password is valid and matches confirmation.
-                  </div>
-                )}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Resetting Password..." : "Reset Password"}
-            </Button>
-          </CardFooter>
-        </form>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Resetting Password..." : "Reset Password"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
       </Card>
     </div>
   );

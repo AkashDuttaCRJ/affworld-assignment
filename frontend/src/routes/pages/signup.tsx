@@ -9,9 +9,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { axios } from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import * as z from "zod";
 
 // Mock function to check username availability
@@ -42,9 +48,23 @@ const signUpSchema = z
 type SignUpValues = z.infer<typeof signUpSchema>;
 
 export default function SignupPage() {
+  const navigate = useNavigate();
+
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
     null
   );
+
+  const { mutate: registerUser, isPending: loading } = useMutation({
+    mutationFn: (data: {
+      firstName: string;
+      lastName: string;
+      username: string;
+      email: string;
+      password: string;
+    }) => {
+      return axios.post("/auth/register", data);
+    },
+  });
 
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
@@ -59,7 +79,21 @@ export default function SignupPage() {
   });
 
   async function onSubmit(data: SignUpValues) {
-    console.log(data);
+    if (!usernameAvailable) {
+      return;
+    }
+
+    registerUser(data, {
+      onSuccess: () => {
+        toast.success("Account created successfully!");
+        navigate("/app");
+      },
+      onError: (error) => {
+        if (error instanceof AxiosError) {
+          toast.error(error.response?.data.message);
+        }
+      },
+    });
   }
 
   const checkUsername = async (username: string) => {
@@ -109,7 +143,11 @@ export default function SignupPage() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input
+                          placeholder="John"
+                          disabled={loading}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -122,7 +160,11 @@ export default function SignupPage() {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input
+                          placeholder="Doe"
+                          disabled={loading}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -138,6 +180,7 @@ export default function SignupPage() {
                     <FormControl>
                       <Input
                         placeholder="johndoe"
+                        disabled={loading}
                         {...field}
                         onChange={(e) => {
                           field.onChange(e);
@@ -167,7 +210,11 @@ export default function SignupPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="john@example.com" {...field} />
+                      <Input
+                        placeholder="john@example.com"
+                        disabled={loading}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,7 +229,8 @@ export default function SignupPage() {
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="********"
+                        placeholder="Password"
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -199,7 +247,8 @@ export default function SignupPage() {
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="********"
+                        placeholder="Confirm Password"
+                        disabled={loading}
                         {...field}
                       />
                     </FormControl>
@@ -207,8 +256,8 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                {/* {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />} */}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <LoaderCircle className="h-4 w-4 animate-spin" />}
                 Sign Up
               </Button>
             </form>
@@ -223,7 +272,16 @@ export default function SignupPage() {
               </span>
             </div>
           </div>
-          <Button variant="outline" type="button">
+          <Button
+            variant="outline"
+            type="button"
+            disabled={loading}
+            onClick={() => {
+              window.location.href = `${
+                import.meta.env.VITE_API_URL
+              }/auth/google`;
+            }}
+          >
             <GoogleLogo className="h-4 w-4" />
             Google
           </Button>

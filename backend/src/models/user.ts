@@ -1,7 +1,24 @@
-import { hash } from "bcrypt";
+import { compare, hash } from "bcrypt";
 import { Schema, model } from "mongoose";
 
-const UserSchema = new Schema({
+interface IUser {
+  name: {
+    first: string;
+    last: string;
+  };
+  username: string;
+  email: string;
+  password: string;
+  profile: string | null;
+  provider: "email" | "google" | "both" | null;
+  googleProfileData: object | null;
+}
+
+interface IUserDocument extends IUser, Document {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+const UserSchema = new Schema<IUserDocument>({
   name: {
     first: {
       type: String,
@@ -51,6 +68,13 @@ UserSchema.pre("save", async function (next) {
   }
   return next();
 });
+
+UserSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  return await compare(candidatePassword, this.password);
+};
+
 UserSchema.virtual("name.full").get(function () {
   if (this.name === undefined || this.name === null) {
     return "";
@@ -65,6 +89,7 @@ UserSchema.virtual("name.full").get(function () {
       : ` ${this.name.last}`;
   return `${first} ${last}`;
 });
+
 UserSchema.set("toJSON", { virtuals: true });
 UserSchema.set("toObject", { virtuals: true });
 UserSchema.set("timestamps", true);

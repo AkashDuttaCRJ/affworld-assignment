@@ -8,16 +8,98 @@ const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
 
-const handleRegisterUser: RequestHandler = async (req, res) => {};
-
-const handleLoginUser: RequestHandler = async (req, res) => {};
-
-const handleForgotPassword: RequestHandler = async (req, res) => {
+const getUsernameAvailability: RequestHandler = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { username } = req.params;
 
-    if (!email) {
-      res.status(400).json({ success: false, message: "Email is required" });
+    if (!username) {
+      res.status(400).json({ success: false, message: "Username is required" });
+      return;
+    }
+
+    const existingUser = await User.findOne({
+      username,
+    })
+      .select("username")
+      .exec();
+
+    if (existingUser) {
+      res
+        .status(400)
+        .json({ success: false, message: "Username already exists" });
+      return;
+    }
+
+    res.status(200).json({ success: true, message: "Username available" });
+    return;
+  } catch (error) {
+    console.error("Get username availability error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+    return;
+  }
+};
+
+const handleRegisterUser: RequestHandler = async (req, res) => {
+  try {
+    const { firstName, lastName, username, email, password } = req.body;
+
+    if (!firstName || !lastName || !username || !email || !password) {
+      res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+      return;
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
+    if (existingUser) {
+      res.status(400).json({ success: false, message: "User already exists" });
+      return;
+    }
+
+    const user = await User.create({
+      name: {
+        first: firstName,
+        last: lastName,
+      },
+      username,
+      email,
+      password, // this is safe because we hash the password in the model just before saving
+    });
+
+    seedDefaultColumns(user._id);
+
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, {
+      expiresIn: "1d",
+    });
+
+    res
+      .cookie("x-access-token", token, {
+        httpOnly: true,
+        secure: true,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      })
+      .status(201)
+      .json({ success: true, message: "User created", data: user });
+
+    return;
+  } catch (error) {
+    console.error("Register user error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+    return;
+  }
+};
+
+const handleLoginUser: RequestHandler = async (req, res) => {
+  try {
+    const { email, password, remember } = req.body;
+
+    if (!email || !password) {
+      res
+        .status(400)
+        .json({ success: false, message: "Email and password are required" });
       return;
     }
 
@@ -30,11 +112,70 @@ const handleForgotPassword: RequestHandler = async (req, res) => {
       return;
     }
 
+    if (!(await user.comparePassword(password))) {
+      res.status(401).json({ success: false, message: "Invalid password" });
+      return;
+    }
+
+    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, {
+      expiresIn: remember ? "7d" : "1d",
+    });
+
+    res
+      .cookie("x-access-token", token, {
+        httpOnly: true,
+        secure: true,
+        expires: remember
+          ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+          : new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      })
+      .status(200)
+      .json({ success: true, message: "User logged in", data: user });
+    return;
+  } catch (error) {
+    console.error("Login user error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+    return;
+  }
+};
+
+const handleForgotPassword: RequestHandler = async (req, res) => {
+  try {
+    const { identifier } = req.body;
+
+    if (!identifier) {
+      res.status(400).json({
+        success: false,
+        message: "Either email or username is required",
+      });
+      return;
+    }
+
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
+
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    if (user.provider === "google") {
+      res.status(400).json({
+        success: false,
+        message: "You cannot reset your password for a Google account",
+      });
+      return;
+    }
+
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, {
       expiresIn: "15m",
     });
 
     // Send email with token
+    const url = `${process.env.APP_URL}/reset-password?token=${token}`;
+
+    console.log(`Redirecting to ${url}`);
 
     res.status(200).json({
       success: true,
@@ -83,7 +224,7 @@ const handleResetPassword: RequestHandler = async (req, res) => {
     await User.updateOne(
       { email: decoded.email },
       {
-        password: password,
+        password: password, // this is safe because we hash the password in the model just before saving
       }
     );
 
@@ -155,7 +296,7 @@ const handleGoogleOAuth: RequestHandler = async (req, res) => {
       .cookie("x-access-token", token, {
         httpOnly: true,
         secure: true,
-        expires: new Date(Date.now() + 86400000), // 1 day
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
       })
       .redirect(`${process.env.APP_URL!}/app`);
   } catch (error) {
@@ -165,6 +306,7 @@ const handleGoogleOAuth: RequestHandler = async (req, res) => {
 };
 
 export {
+  getUsernameAvailability,
   handleForgotPassword,
   handleGoogleOAuth,
   handleLoginUser,
