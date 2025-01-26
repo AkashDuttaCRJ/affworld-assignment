@@ -14,7 +14,7 @@ import taskRouter from "./routes/task";
 const app = express();
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.APP_URL!,
     credentials: true,
   })
 );
