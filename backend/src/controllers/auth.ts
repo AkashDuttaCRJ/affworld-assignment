@@ -128,6 +128,7 @@ const handleLoginUser: RequestHandler = async (req, res) => {
         expires: remember
           ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
           : new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+        sameSite: "none",
       })
       .status(200)
       .json({ success: true, message: "User logged in", data: user });
