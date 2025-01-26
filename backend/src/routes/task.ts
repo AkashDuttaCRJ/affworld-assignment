@@ -8,11 +8,8 @@ import {
   handleUpdateTask,
 } from "../controllers/task";
 
-router
-  .route("/")
-  .get(handleGetTasks)
-  .post(handleCreateTask)
-  .patch(handleUpdateTask)
-  .delete(handleDeleteTask);
+router.route("/").get(handleGetTasks).post(handleCreateTask);
+
+router.route("/:id").patch(handleUpdateTask).delete(handleDeleteTask);
 
 export default router;

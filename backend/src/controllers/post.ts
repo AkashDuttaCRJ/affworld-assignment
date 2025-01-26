@@ -42,6 +42,7 @@ const handleGetAllPosts: RequestHandler = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const posts = await Post.find()
       .populate("_userId")
+      .sort({ createdAt: -1 })
       .skip((+page - 1) * +limit)
       .limit(+limit)
       .exec();

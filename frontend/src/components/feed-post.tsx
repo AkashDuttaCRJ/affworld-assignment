@@ -83,9 +83,6 @@ export function FeedPost({ user, post }: FeedPostProps) {
         <div className="p-4">
           <p className="text-sm [&_[data-hashtag=true]]:text-blue-500">
             {parse(sanitizeHtml(post.caption))}
-            {parse(
-              `<hr id="foo" class="bar" data-attr="baz" custom="qux" style="top:42px;" >`
-            )}
           </p>
           <p className="text-xs text-muted-foreground mt-2">
             {formatDistanceToNow(post.postedAt, { addSuffix: true })}

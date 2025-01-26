@@ -1,6 +1,7 @@
 import axios from "axios";
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
+import { seedDefaultColumns } from "../lib/seed-default-columns";
 import { User } from "../models/user";
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
@@ -129,7 +130,7 @@ const handleGoogleOAuth: RequestHandler = async (req, res) => {
     // check if user already exists
     const user = await User.findOne({ email: profile.email });
     if (!user) {
-      const newUser = new User({
+      const newUser = await User.create({
         name: { first: profile.given_name, last: profile.family_name },
         email: profile.email,
         password: "",
@@ -138,7 +139,8 @@ const handleGoogleOAuth: RequestHandler = async (req, res) => {
         googleProfileData: profile,
         provider: "google",
       });
-      await newUser.save();
+
+      seedDefaultColumns(newUser._id);
     } else if (user.provider !== "google") {
       user.googleProfileData = profile;
       user.provider = "both";
