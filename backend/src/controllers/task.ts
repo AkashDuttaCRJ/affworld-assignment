@@ -78,6 +78,14 @@ const handleUpdateTask: RequestHandler = async (req, res) => {
       return;
     }
 
+    if (tasksOrder.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "tasksOrder must contain at least one task ID.",
+      });
+      return;
+    }
+
     const user = await User.findOne({ email }).select("_id").exec();
 
     if (!user) {
@@ -109,10 +117,15 @@ const handleUpdateTask: RequestHandler = async (req, res) => {
         return;
       }
 
-      oldColumn.tasks = oldColumn.tasks.filter((taskId) => taskId !== task._id);
+      oldColumn.tasks = oldColumn.tasks.filter(
+        (taskId) => String(taskId) !== String(task._id)
+      );
       newColumn.tasks = [...tasksOrder];
 
       task.columnId = columnId;
+
+      console.log({ oldColumn, newColumn });
+      console.log({ task });
 
       await oldColumn.save();
       await newColumn.save();
@@ -187,6 +200,7 @@ const handleGetTasks: RequestHandler = async (req, res) => {
 
     const columns = await Column.find({ _user: user._id })
       .populate("tasks")
+      .sort({ rank: 1 })
       .exec();
 
     res.json({ success: true, data: columns });

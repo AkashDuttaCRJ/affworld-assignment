@@ -15,6 +15,10 @@ const ColumnSchema = new Schema({
     ref: "Task",
     required: true,
   },
+  rank: {
+    type: Number,
+    required: true,
+  },
 });
 
 ColumnSchema.set("timestamps", true);
