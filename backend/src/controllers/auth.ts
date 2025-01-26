@@ -298,6 +298,7 @@ const handleGoogleOAuth: RequestHandler = async (req, res) => {
         httpOnly: true,
         secure: true,
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+        sameSite: "none",
       })
       .redirect(`${process.env.APP_URL!}/app`);
   } catch (error) {
