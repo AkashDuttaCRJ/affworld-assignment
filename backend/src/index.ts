@@ -79,6 +79,7 @@ app.get("/user", async (req, res) => {
   }
 
   const user = await User.findOne({ email: decoded.email });
+  console.log({ user, decoded, token });
   if (!user) {
     res.status(404).json({ success: false, message: "User not found" });
     return;
