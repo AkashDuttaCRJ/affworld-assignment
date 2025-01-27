@@ -15,7 +15,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import parse from "html-react-parser";
 import { Heart, MessageCircle, MoreHorizontal, Share2 } from "lucide-react";
-import { useState } from "react";
 import sanitizeHtml from "sanitize-html";
 import DynamicGrid from "./dynamic-grid";
 import { PostImage } from "./post-image";
@@ -36,21 +35,9 @@ interface FeedPostProps {
 }
 
 export function FeedPost({ user, post }: FeedPostProps) {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes);
-
-  const handleLike = () => {
-    if (isLiked) {
-      setLikeCount(likeCount - 1);
-    } else {
-      setLikeCount(likeCount + 1);
-    }
-    setIsLiked(!isLiked);
-  };
-
   return (
     <Card className="max-w-md mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-0">
         <div className="flex items-center space-x-2">
           <Avatar>
             <AvatarImage src={user.avatar} alt={user.name} />
@@ -74,7 +61,7 @@ export function FeedPost({ user, post }: FeedPostProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 space-y-4">
         <DynamicGrid>
           {post.images.map((image) => (
             <PostImage key={image} image={image} />
@@ -94,13 +81,10 @@ export function FeedPost({ user, post }: FeedPostProps) {
           <Button
             variant="ghost"
             size="sm"
-            className={`flex items-center space-x-1 ${
-              isLiked ? "text-red-500" : ""
-            }`}
-            onClick={handleLike}
+            className="flex items-center space-x-1"
           >
-            <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-            <span>{likeCount}</span>
+            <Heart className="h-4 w-4" />
+            <span>{post.likes}</span>
           </Button>
           <Button
             variant="ghost"

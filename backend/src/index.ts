@@ -58,8 +58,27 @@ app.use(middleware);
 app.use("/tasks", taskRouter);
 app.use("/post", postRouter);
 app.get("/user", async (req, res) => {
-  const email = req.headers["email"] as string;
-  const user = await User.findOne({ email });
+  const token = req.cookies["x-access-token"];
+
+  if (!token) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+    return;
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
+
+  if (!decoded) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+    return;
+  }
+
+  const user = await User.findOne({ email: decoded.email });
   if (!user) {
     res.status(404).json({ success: false, message: "User not found" });
     return;
