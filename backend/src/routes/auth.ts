@@ -23,8 +23,5 @@ router.get("/google", (req, res) => {
   res.redirect(url);
 });
 router.get("/google/callback", handleGoogleOAuth);
-router.get("/logout", (req, res) => {
-  res.clearCookie("x-access-token").redirect(process.env.APP_URL!);
-});
 
 export default router;

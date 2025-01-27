@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 export const middleware: RequestHandler = (req, res, next) => {
   console.log("Middleware called");
-  const token = req.cookies["x-access-token"];
+  const token = req.headers["x-access-token"] as string;
   console.log(`Token: ${token}`);
   if (!token) {
     res.status(401).json({

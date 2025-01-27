@@ -10,6 +10,15 @@ const instance = axios.create({
   withCredentials: true,
 });
 
+// add a request interceptor to the axios instance for adding the token to the request headers
+instance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers["x-access-token"] = token;
+  }
+  return config;
+});
+
 instance.interceptors.response.use(
   (response) => response,
   (error) => {

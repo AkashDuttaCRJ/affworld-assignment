@@ -66,8 +66,10 @@ export default function LoginPage() {
         remember,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           toast.success("Login successful!");
+          const token = data.data.token;
+          localStorage.setItem("token", token);
           navigate("/app");
         },
         onError(error) {

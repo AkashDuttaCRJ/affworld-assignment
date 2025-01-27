@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/verify-token", (req, res) => {
-  const token = req.cookies["x-access-token"];
+  const token = req.headers["x-access-token"] as string;
 
   if (!token) {
     res.status(401).json({ success: false, message: "Unauthorized" });
@@ -59,7 +59,7 @@ app.use(middleware);
 app.use("/tasks", taskRouter);
 app.use("/post", postRouter);
 app.get("/user", async (req, res) => {
-  const token = req.cookies["x-access-token"];
+  const token = req.headers["x-access-token"] as string;
 
   if (!token) {
     res.status(401).json({

@@ -80,13 +80,8 @@ const handleRegisterUser: RequestHandler = async (req, res) => {
     });
 
     res
-      .cookie("x-access-token", token, {
-        httpOnly: true,
-        secure: true,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-      })
       .status(201)
-      .json({ success: true, message: "User created", data: user });
+      .json({ success: true, message: "User created", data: user, token });
 
     return;
   } catch (error) {
@@ -126,16 +121,8 @@ const handleLoginUser: RequestHandler = async (req, res) => {
     });
 
     res
-      .cookie("x-access-token", token, {
-        httpOnly: true,
-        secure: true,
-        expires: remember
-          ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-          : new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-        sameSite: "none",
-      })
       .status(200)
-      .json({ success: true, message: "User logged in", data: user });
+      .json({ success: true, message: "User logged in", data: user, token });
     return;
   } catch (error) {
     console.error("Login user error:", error);
@@ -312,14 +299,7 @@ const handleGoogleOAuth: RequestHandler = async (req, res) => {
       expiresIn: "1d",
     });
 
-    res
-      .cookie("x-access-token", token, {
-        httpOnly: true,
-        secure: true,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
-        sameSite: "none",
-      })
-      .redirect(`${process.env.APP_URL!}/app`);
+    res.redirect(`${process.env.APP_URL!}/auth/google?token=${token}`);
   } catch (error) {
     console.error("Error:", error);
     res.redirect(process.env.APP_URL!);

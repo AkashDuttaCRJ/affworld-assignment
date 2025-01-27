@@ -12,8 +12,11 @@ import { axios } from "@/lib/axios";
 import { User } from "@/types/user";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 export function UserDropdown() {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,7 +32,9 @@ export function UserDropdown() {
 
   const handleLogout = () => {
     console.log("Logging out...");
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/logout`;
+    setIsOpen(false);
+    localStorage.removeItem("token");
+    navigate("/");
   };
 
   return (
