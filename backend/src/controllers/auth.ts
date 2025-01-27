@@ -182,7 +182,7 @@ const handleForgotPassword: RequestHandler = async (req, res) => {
 
     const template = getResetPasswordEmailTemplate(url);
 
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: "YourCompany <onboarding@resend.dev>",
       to: user.email,
       subject: "Reset Your Password",
