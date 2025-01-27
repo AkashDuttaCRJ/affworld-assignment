@@ -39,22 +39,14 @@ const handleCreatePost: RequestHandler = async (req, res) => {
 
 const handleGetAllPosts: RequestHandler = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
     const posts = await Post.find()
       .populate("_user")
       .sort({ createdAt: -1 })
-      .skip((+page - 1) * +limit)
-      .limit(+limit)
       .exec();
-    const totalCount = await Post.countDocuments().exec();
+
     res.json({
       success: true,
-      data: {
-        total: totalCount,
-        page: +page,
-        limit: +limit,
-        posts,
-      },
+      data: posts,
     });
     return;
   } catch (error) {

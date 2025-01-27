@@ -14,7 +14,7 @@ export default function Feed() {
           refetch();
         }}
       />
-      {data?.data?.posts.map((post) => {
+      {data?.data?.map((post) => {
         return (
           <FeedPost
             key={post._id}

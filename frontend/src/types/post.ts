@@ -12,10 +12,5 @@ type Post = {
 };
 
 export type PostResponse = {
-  data: {
-    total: number;
-    page: number;
-    limit: number;
-    posts: Post[];
-  };
+  data: Post[];
 };

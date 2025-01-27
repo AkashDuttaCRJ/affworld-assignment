@@ -32,16 +32,12 @@ export function UserDropdown() {
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/logout`;
   };
 
-  if (!user) {
-    return null;
-  }
-
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="focus-visible:ring-0">
           <Avatar>
-            <AvatarImage src={user.profile} alt={user.username} />
+            <AvatarImage src={user?.profile} alt={user?.username} />
             <AvatarFallback>
               <UserIcon className="h-5 w-5" />
             </AvatarFallback>
@@ -50,15 +46,21 @@ export function UserDropdown() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name.full}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        {user && (
+          <>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {user.name.full}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem asChild>
           <a href="/profile">
             <UserIcon className="mr-2 h-4 w-4" />
