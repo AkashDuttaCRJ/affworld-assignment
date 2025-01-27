@@ -228,12 +228,8 @@ const handleResetPassword: RequestHandler = async (req, res) => {
       return;
     }
 
-    await User.updateOne(
-      { email: decoded.email },
-      {
-        password: password, // this is safe because we hash the password in the model just before saving
-      }
-    );
+    user.password = password;
+    await user.save();
 
     res.status(200).json({
       success: true,
