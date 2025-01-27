@@ -17,6 +17,8 @@ export const useVerifyToken = () => {
       }
     };
 
-    verify();
+    const timer = setTimeout(() => verify(), 500);
+
+    return () => clearTimeout(timer);
   }, []);
 };
