@@ -13,9 +13,11 @@ const instance = axios.create({
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response.status === 401 && window.location.pathname !== "/") {
-      window.location.href = "/";
-    }
+    setTimeout(() => {
+      if (error.response.status === 401 && window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    }, 1000);
   }
 );
 

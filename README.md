@@ -62,6 +62,14 @@ Cloudinary is used for image uploading and storage. To configure Cloudinary in t
   VITE_CLD_API_SECRET=your_api_secret
   ```
 
+### 4. Resend API Key
+
+Needed for sending transactional emails via the Resend email API service.
+
+```env
+RESEND_API_KEY=your-resend-api-key
+```
+
 ## Setup
 
 The setup instructions for both the backend and frontend is identical. The instructions are as follows:

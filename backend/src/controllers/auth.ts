@@ -1,8 +1,12 @@
 import axios from "axios";
 import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
+import { Resend } from "resend";
 import { seedDefaultColumns } from "../lib/seed-default-columns";
 import { User } from "../models/user";
+import { getResetPasswordEmailTemplate } from "../template";
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -176,7 +180,22 @@ const handleForgotPassword: RequestHandler = async (req, res) => {
     // Send email with token
     const url = `${process.env.APP_URL}/reset-password?token=${token}`;
 
-    console.log(`Redirecting to ${url}`);
+    const template = getResetPasswordEmailTemplate(url);
+
+    const { error } = await resend.emails.send({
+      from: "YourCompany <onboarding@resend.dev>",
+      to: user.email,
+      subject: "Reset Your Password",
+      html: template,
+    });
+
+    if (error) {
+      console.error("Error sending email:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
+      return;
+    }
 
     res.status(200).json({
       success: true,
