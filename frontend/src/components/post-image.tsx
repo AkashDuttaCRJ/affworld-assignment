@@ -16,7 +16,7 @@ export function PostImage({
         <img
           src="/placeholder.svg"
           alt="Placeholder"
-          className="w-full h-full absolute top-0 left-0"
+          className="w-full h-full absolute top-0 left-0 object-cover"
         />
       )}
       <img
